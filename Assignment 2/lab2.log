@@ -1,0 +1,251 @@
+Locale
+We check locale we're in by using the locale command. If we are not in the
+standard C or POSIX locale, we set the locale to standard C. We run the locale
+command again to make sure the locale has been changed.
+Commands: locale
+	  export LC_ALL='C'
+
+
+words
+We get the 'words' file from the /usr/share/dict directory and put the sorted
+contents of the file into a file named 'words' in our working directory.
+Command: sort /usr/share/dict/words > words
+
+
+Command Outputs
+We download the assigment's web page using wget to run the listed commands.
+The webpage is stored in a file called assign2.html.
+Command: wget https://web.cs.ucla.edu/classes/spring18/cs35L/assign/assign2.html
+
+1. tr -c 'A-Za-z' '[\n*]' < assign2.html
+   The command outputs all text that has the alphabet (A-Z or a-z) due to the -c
+   flag replaces any characters not provided in the set and replaces them with
+   the second argument. Thus, any characters that are not the alphabet are
+   replaced by a newline, which in turn outputs a lot of empty lines.
+
+2. tr -cs 'A-Za-z' '[\n*]' < assign2.html
+   The command also outputs all text that has the alphabet, but only one newline
+   is kept so that there are no empty lines in between word. This is due to the
+   -s flag that is added, which squeezes consecutive repeated characters into
+   one instance of it.
+
+3. tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort
+   The command has the same output as before, but all the words are sorted
+   lexicographically according to the locale. In this case, they were sorted
+   alphabetically. However, there are multiple occurrences of some words. This
+   is because the sort command sorts lines of text.
+
+4. tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort -u
+   The command has the same output as before, but there is only one occurrence
+   of each word. This is due to the -u flag with the sort command, which outputs
+   only the first instance of consecutive repeated words.
+
+5. tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort -u | comm - words
+   This command takes the output from before and compares it to the 'words'
+   file. It outputs 3 columns. The first column are words unique to our output
+   from part 4. The second column are words unique to the 'words' file. The
+   third column are words common to both.
+
+6. tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort -u | comm -23 - words
+   This command only outputs the words unique to our output from part 4. The -23
+   flags for the comm command suppresses the second and third columns, and only
+   shows the first column.
+
+
+buildwords Script
+We download the English to Hawaiian webpage using wget to create the dictionary.
+Command: wget http://mauimapp.com/moolelo/hwnwdseng.htm
+
+The following is this script:
+#!/bin/bash
+
+#get all the words with td tags
+grep -o '<td>.*<\/td>' |
+
+#delete all html tags in the lines
+sed 's/<[^>]*>//g' |
+
+#delete all extra empty lines
+sed '/^$/d' |
+
+#delete all the English words (odd numbered lines)
+sed -n '1~2!p' |
+
+#replace all ` with '
+sed s/\`/\'/g |
+
+#replace all , with new lines
+sed 's/\,/\n/g' |
+
+#replace spaces between new lines to separate words on the same line
+sed 's/ /\n/g' |
+
+#delete all extra empty lines
+sed '/^$/d' |
+
+#lowercase all the words
+tr '[:upper:]' '[:lower:]' |
+
+#delete all words that are improperly formatted
+sed '/-/d' |
+
+#delete any words that don't conform to the Hawaiian alphabet
+tr -cs "pk\'mnwlhaeiou" '[\n*]' |
+
+#sort the words and delete duplicates
+sort -u
+
+We make the script executable. Then, we make out Hawaiian dictionary.
+Commands: chmod +x buildwords
+	  cat hwnwdseng.htm | ./buildwords > hwords
+
+
+Checking Spelling using Dictionaries
+We run the Hawaiian spell checker on the assignment's web page, assign.html. We
+store the words in a file to use them later. We use the wc -w command to count
+the number of words. On the web page, there were 196 misspelled Hawaiian words.
+Commands: cat assign2.html | tr '[:upper:]' '[:lower:]' |
+	  tr -cs "pk\'mnwlhaeiou" '[\n*]' | sort -u |
+	  comm -23 - hwords > misspelledHawaiian
+	  wc -w misspelledHawaiian
+
+We run the Hawaiian spell checker on the Hawaiian dictionary, hwords, itself. As
+expected, we get 0 misspelled Hawaiian words.
+Command: cat hwords | tr '[:upper:]' '[:lower:]' |
+	 tr -cs "pk\'mnwlhaeiou" '[\n*]' | sort -u |
+	 comm -23 - hwords | wc -w
+
+We run the English spell checker on the assignment's web page, assign.html. We
+store the words in a file to use them later. We use the wc -w command to count
+the number of words. On the web page, there are 38 misspelled English words.
+Commands: cat assign2.html | tr '[:upper:]' '[:lower:]' |
+	  tr -cs 'A-Za-z' '[\n*]' | sort -u |
+	  comm -23 - words > misspelledEnglish
+	  wc -w misspelledEnglish
+
+We use our Hawaiian spell checker on our misspelledEnglish to check if any words
+are "misspelled" as English, but not as Hawaiian. We find that there are some.
+Command: cat misspelledEnglish | tr -cs "pk\'mnwlhaeiou" '[\n*]' |
+	 sort -u | comm -12 - hwords
+Examples:
+e
+halau
+i
+lau
+po
+wiki
+
+We use our English spell checker on our misspelledHawaiian to check if any words
+are "misspelled" as Hawaiian, but not as English. We find that there are some.
+Command: cat misspelledHawaiian | tr -cs 'A-Za-z' '[\n*]' |
+	 sort -u | comm -12 - words
+Examples:
+a
+ail
+ain
+ake
+al
+ale
+alen
+all
+amine
+amp
+ample
+an
+aph
+awk
+e
+ea
+ee
+el
+em
+emp
+en
+ep
+epa
+h
+ha
+han
+hap
+hawaiian
+he
+hei
+hell
+hem
+hen
+hi
+hin
+ho
+how
+howe
+ia
+ie
+ii
+ile
+imp
+in
+ion
+iou
+k
+keep
+kin
+l
+lan
+le
+lea
+li
+like
+line
+link
+ln
+lo
+lowe
+m
+mail
+man
+me
+men
+mi
+ml
+mo
+mp
+n
+name
+ne
+nee
+no
+non
+nu
+num
+o
+om
+on
+one
+op
+ope
+open
+own
+p
+paul
+pe
+pell
+people
+plea
+pu
+u
+ui
+ula
+ule
+ume
+ump
+un
+uni
+w
+wa
+wan
+we
+wh
+wha
+who
+wi
+wo

@@ -1,0 +1,36 @@
+Q1. The patch made the performance of ls worse. This is due to the fact that
+    an additional check was added in the code of command to ignore "." and ".."
+    that worsens performance. The time command affirms with this. Both commands
+    were tested on various directories and the unmodified command was done
+    in a faster time than the unmodified command almost every attempt.
+
+Q2. The new version of coreutils should not introduce any problems in our
+    application as long as our code follows the POSIX.1-2008 standards. We just
+    need to be aware of situations where we may have put the -A flag after -f
+    and expected "." and ".." to be included as well.
+
+Q3. The script runs into an error when it's invoked on an empty file with a
+    numlines parameter that is greater than 0. Since the file is empty, an
+    IndexError is thrown in the chooseline() function. The error does not occur
+    when we pass 0 into numlines but this does not access the function and
+    essentially does nothing.
+The output:
+File "randline.py", line 70, in <module>
+  main()
+File "randline.py", line 64, in main
+  sys.stdout.write(generator.chooseline())
+File "randline.py", line 34, in chooseline
+  return random.choice(self.lines)
+File "/usr/local/cs/Python-2.7.14/lib/python2.7/random.py", line 277, in choice
+  return seq[int(self.random() * len(seq))]  # raises IndexError if seq is empty
+IndexError: list index out of range
+
+
+Q4. When the script is invoked with Python 3, it does not work in any case and
+    outputs a SyntaxError. Python 3 deprecated automatic tuple unpacking so the
+    (errno, strerror) passed in as an exception gives an error.
+The output:
+File "randline.py", line 65
+    except IOError as (errno, strerror):
+                      ^
+SyntaxError: invalid syntax

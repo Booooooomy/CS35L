@@ -1,0 +1,61 @@
+First, we rewrite sfrob as sfrobu, which supports a "-f" option to ignore case and uses read and
+write system calls unlike sfrob.
+
+Then, we compare the performance of sfrob and sfrobu using the time command (the comparisons are
+lower in the file). Dor the purpose of estimating the number of comparisons as a function of the
+number of input lines, we edit sfrob and sfrobu by adding a global variable to keep track of the
+number of times frobcmp is called. We get the following results:
+#lines  |  comparisons
+1000    |   19818
+10000   |   265656
+100000  |   3325620
+1000000 |   39734257
+
+Graphing a log-log plot of the data, we see that the functional form of this data is a nlogn graph.
+It can be approximated by the following function: f(n) = (n/2)*log(n).
+
+
+Finally, we use the time command on sfrob, sfrobu, sfrobs, sfrobu -f, and sfrobs -f to observe the
+differences in performance. We use four files, one with 1000 lines (test1.txt), one with 10000
+lines (test2.txt), one with 100000 lines (test3.txt), and one with 1000000 (test4.txt), to compare
+performances. We generated the test files using the following command:
+Command: yes 'This is some text ' | head -n [#lines] > [test#].txt
+    i.e. yes 'This is some text ' | head -n 1000 > test1.txt
+
+Using test1.txt (1000 lines):
+Command: time ./[FILENAME] < test1.txt
+    i.e: time ./sfrob < test1.txt
+      |  sfrob     |  sfrobu    |  sfrobs    |  sfrobu -f |   sfrobs -f
+real  |	 0m0.006s  |  0m0.009s  |  0m0.010s  |  0m0.007s  |   0m0.007s
+user  |	 0m0.003s  |  0m0.004s  |  0m0.004s  |  0m0.004s  |   0m0.006s
+sys   |  0m0.003s  |  0m0.005s  |  0m0.006s  |  0m0.005s  |   0m0.003s
+
+Using test1.txt (10000 lines):
+Command: time ./[FILENAME] < test2.txt
+    i.e: time ./sfrob < test2.txt
+      |  sfrob     |  sfrobu    |  sfrobs    |  sfrobu -f |   sfrobs -f
+real  |	 0m0.048s  |  0m0.054s  |  0m0.124s  |  0m0.061s  |   0m0.031s
+user  |	 0m0.031s  |  0m0.033s  |  0m0.015s  |  0m0.041s  |   0m0.017s
+sys.  |  0m0.012s  |  0m0.038s  |  0m0.012s  |  0m0.038s  |   0m0.014s
+
+Using test1.txt (10000 lines):
+Command: time ./[FILENAME] < test3.txt
+    i.e: time ./sfrob < test3.txt
+      |  sfrob     |  sfrobu    |  sfrobs    |  sfrobu -f |   sfrobs -f
+real  |	 0m0.564s  |  0m0.804s  |  0m0.276s  |  0m0.939s  |   0m0.388s
+user  |	 0m0.309s  |  0m0.365s  |  0m0.120s  |  0m0.496s  |   0m0.195s
+sys   |  0m0.148s  |  0m0.415s  |  0m0.080s  |  0m0.419s  |   0m0.077s
+
+Using test1.txt (100000 lines):
+Command: time ./[FILENAME] < test4.txt
+    i.e: time ./sfrob < test4.txt
+      |  sfrob     |  sfrobu    |  sfrobs    |  sfrobu -f |   sfrobs -f
+real  |	 0m5.437s  |  0m8.487s  |  0m3.308s  |  0m10.148s |   0m4.160s
+user  |	 0m3.658s  |  0m3.999s  |  0m1.441s  |  0m5.680s  |   0m2.256s
+sys   |  0m1.546s  |  0m4.251s  |  0m0.738s  |  0m4.256s  |   0m0.723s
+
+We see that for our tests, sfrobs is the fastest, sfrob is the second fastest, and srfobu is the
+slowest. This is most likely due to the fact that sfrobu relies more on system calls and therefore
+takes more time than the other programs. It's also apparent that the -f option makes both sfrobu
+and sfrobs a little slower, possibly due to the fact that all -f option has to make an extra check
+to ignore case.

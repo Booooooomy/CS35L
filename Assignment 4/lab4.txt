@@ -1,0 +1,124 @@
+Laboratory: Debugging a C Program
+
+First, we download the source file using wget to store coreutils in our working
+directory. Then, we unzip the file.
+Commands: wget https://web.cs.ucla.edu/classes/spring18/cs35L/assign/coreutils-with-bug.tar.gz
+	  tar -xzvf coreutils-with-bug.tar.gz
+
+We then cd into the coreutils-with-bug directory and configure and make the
+files.
+Commands: cd coreutils-with-bug/
+	  ./configure --prefix=/u/cs/ugrad/saibalaj/coreutils
+	  make
+
+However, when we run make, we get an error (reproduced below):
+  In file included from utimecmp.c:41:
+  utimens.h:2:5: error: conflicting types for 'futimens'
+   int futimens (int, char const *, struct timespec const [2]);
+       ^~~~~~~~
+  In file included from utimecmp.h:25,
+                   from utimecmp.c:25:
+  /usr/include/sys/stat.h:373:12: note: previous declaration of 'futimens' was here
+   extern int futimens (int __fd, const struct timespec __times[2]) __THROW;
+              ^~~~~~~~
+
+The error is that there are two functions with the same name, so the
+redifinition of the function is throwing an error. We fix this with our patch.
+First, we wget the patch and apply the using the patch command. The patch
+fixes the problem by renaming the functions "futimens" and "tee" and replacing
+the name of the functions wherever they are called. Finally, we make and make
+install to install the patch coreutils.
+Commands: wget https://web.cs.ucla.edu/classes/spring18/cs35L/assign/coreutils.diff
+	  patch -p0 < coreutils.diff
+	  make
+	  make install
+
+Now, we reproduce the problem with ls -t. We create a temporary directory and
+create 3 files as given in the example. We run the ls -t command in this
+directory to see the output.
+Commands: tmp=$(mktemp -d)
+	  cd $tmp
+	  touch -d '1918-11-11 11:00 GMT' wwi-armistice
+	  touch now
+	  sleep 1
+	  touch now1
+	  ~/coreutils/bin/ls -lt --full-time wwi-armistice now now1
+
+We get the following output:
+-rw-r--r-- 1 saibalaj csugrad 0 1918-11-11 03:00:00.000000000 -0800 wwi-armistice
+-rw-r--r-- 1 saibalaj csugrad 0 2018-05-03 17:22:29.024745017 -0700 now1
+-rw-r--r-- 1 saibalaj csugrad 0 2018-05-03 17:22:17.018340882 -0700 now
+
+
+We know that the problem is that the 'wwi-armistice' should not be first, but
+instead last when listed out using the ls command. To check the problem, we
+use gdb to debug. We use the command "info functions" to look at all the
+functions in ls. Since we are concerned with a problem of the ls function
+that does not sort properly by the modification date, we look for a relevant
+function. We notice that a function called 'compare_mtime' exists, so we set
+a breakpoint there. We then run the program and break at the function. We
+step into the function to see what's going on and we get taken to another
+function called 'timespec_cmp' that is in the file 'timespec.h'. Using the
+list command, we can see the whole function (reproduced below):
+
+	timespec_cmp (struct timespec a, struct timespec b)
+	{
+	  int diff = a.tv_sec - b.tv_sec;
+	  return diff ? diff : a.tv_nsec - b.tv_nsec;
+	}
+
+Commands: gdb ~/coreutils/bin/ls
+	  (gdb) info functions
+	  (gdb) break compare_mtime
+	  (gdb) run -lt
+	  (gdb) stepi
+	  (gdb) list
+
+From looking at the function, we can see that the problem could be due to the
+this subtraction: 'a.tv_nsec - b.tv_nsec'. There will be integer overflow in
+some cases, like ours when the time is well in the past, and the time wraps
+around to a number in the future.
+
+In order to fix this problem, we quit gdb and create a copy of the timespec.h
+file and edit the function. We can fix the error by making comparisons instead
+of relying on subtraction. If a.tv_sec is less than b.tv_sec, we return a -1;
+if they're equal, we return 0; and if the first is greater, we return 1. This
+will induce the same effect. We fix the function using emacs.
+Commands: (gdb) quit
+	  cp lib/timespec.h timespec.h
+	  emacs timespec.h
+
+Now, we have to generate the patch file and we can do this using the diff -u
+command and redirect the output to lab4.diff. Then, we use emacs edit the
+file into the form of a ChangeLog entry. Using C-x 4-a, we can add a
+ChangeLog entry and copy and paste that into out diff file. We also append
+'lib/' to start of the line where we add the timespec.h to ensure that
+timespec.h gets edited.
+Commands: diff -u lib/timespec.h timespec.h > lab4.diff
+	  emacs lab4.diff
+	  C-x 4-a
+	  C-x C-c
+
+
+Lastly, we reproduce the problem in our home directory on the SEASnet Linux
+servers. We create a temporary directory called "tmp" and use the same
+commands as in the example given.
+Commands: mkdir tmp
+	  cd tmp
+	  touch -d '1918-11-11 11:00 GMT' wwi-armistice
+	  touch now
+	  sleep 1
+	  touch now1
+	  ls -lt --full-time wwi-armistice now now1
+
+We get the following output:
+-rw-r--r-- 1 saibalaj csugrad 0 2054-12-17 09:28:16.000000000 -0800 wwi-armistice
+-rw-r--r-- 1 saibalaj csugrad 0 2018-05-03 17:30:02.575144000 -0700 now1
+-rw-r--r-- 1 saibalaj csugrad 0 2018-05-03 17:29:52.692484000 -0700 now
+
+The timestamp for the 'wwi-armistice' is now 2054. This is due to different
+filesystems. The Local File System on Linux server has signed 32-bit time
+stamps. Since Unix Epoch time starts in the year 1970, any time before that
+is negative, such as 1918. However, the SEASnet NFS filesystem has unsigned
+32-bit timestamps and does not consider negative times. Thus, the computer
+returns a time in the future instead.

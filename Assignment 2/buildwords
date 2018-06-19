@@ -1,0 +1,37 @@
+#!/bin/bash
+
+#get all the words surrounded with td tags (-o: gets only matching section)
+grep -o '<td>.*<\/td>' |
+
+#delete all html tags in the lines
+sed 's/<[^>]*>//g' |
+
+#delete all extra empty lines
+sed '/^$/d' |
+
+#delete all the English words (odd numbered lines)
+sed -n '1~2!p' |
+
+#replace all ` with '
+sed s/\`/\'/g |
+
+#replace all , with new lines
+sed 's/\,/\n/g' |
+
+#replace spaces between new lines to separate words on the same line
+sed 's/ /\n/g' |
+
+#delete all extra empty lines
+sed '/^$/d' |
+
+#lowercase all the words
+tr '[:upper:]' '[:lower:]' |
+
+#delete all words that are improperly formatted
+sed '/-/d' |
+
+#delete any words that don't conform to the Hawaiian alphabet
+tr -cs "pk\'mnwlhaeiou" '[\n*]' |
+
+#sort the words and delete duplicates
+sort -u

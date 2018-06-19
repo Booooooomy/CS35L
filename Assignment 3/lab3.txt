@@ -1,0 +1,78 @@
+Laboratory: Installing a small change to a big package
+
+1. We use wget to download coreutils-8.29 into our home directory. Then, we
+download the signature file and GNU keyring. These two help verify the signature
+for coreutils-8.29. When we run the command described in number 1 (reproduced
+below), we get a warning message that says "This key is not certified with a
+trusted signature! There is no indication that the signature belongs to the
+owner." This occurs because this key is public and not verified by the user.
+Commands: wget ftp://ftp.gnu.org/gnu/coreutils/coreutils-8.29.tar.xz
+	  wget ftp://ftp.gnu.org/gnu/coreutils/coreutils-8.29.tar.xz.sig
+	  wget http://ftp.gnu.org/gnu/gnu-keyring.gpg
+	  gpg --verify --keyring ./gnu-keyring.gpg coreutils-8.29.tar.xz.sig
+
+2. We extract the files using the tar command. This creates a directory called
+"coreutils-8.29." We go into the coreutils-8.29 directory using cd and run the
+autoreconf command to ensure that the autoreconf is installed in our /usr/local/
+usr/bin path. Then, we run the configure script with the prefix flag. We make
+sure to provide an absolute path for the flag. Then, we run make and make
+install to install the files. This creates a directory named "coreutilsInstall."
+There seemed to be no problems.
+Commands: tar -xJvf coreutils-8.29.tar.xz
+	  cd coreutils-8.29
+	  autoreconf -f -i
+	  ./configure --prefix=/u/cs/ugrad/saibalaj/coreutilsInstall
+	  make
+	  make install
+
+3. To reproduce the error, we go into ~/coreutilsInstall/bin and run the command
+"ls -aA." As expected, this lists "." and ".." which is the bug.
+Commands: cd ~/coreutilsInstall/bin/
+	  ./ls -a -A
+
+4. We go back to the coreutils-8.29 directory. Then, we copy and paste the patch
+provided in Bug#30963 Message #10 into a file called patch_file using nano. We
+apply the patch using the patch command with the flag p1 to get rid of the "a"
+in the pathname provided in the patch.
+Commands: cd ~/CS35L/lab3/coreutils-8.29/
+	  nano patch_file
+	  patch -p1 < patch_file
+	  
+5. Now, we want to build the patched file. we simply run the make command at the
+highest level of the coreutils-8.29 directory. Since the second time you call
+make, it only has to compile files related to the patch, there are less commands
+executed. For instance, the second make does not include a lot of the lib files
+that the first make has.
+Command: make
+
+6. We test to make sure the modified ls works and the installed ls doesn't. We
+first run the unmodified command on our working directory and then the
+patched command. Both work as expected. In order to simulate the test included
+with patch, we create a new directory called "test." We cd into this empty
+directory and run both commands again. Both work as expected again. The outputs
+are shown below:
+
+Output of Unmodified Command on Working Directory:
+ .			 coreutils-8.29.tar.xz.sig
+ ..			 gnu-keyring.gpg	  
+ coreutils-8.29		 hw3.txt		  
+ coreutils-8.29.tar.xz	 lab3.txt
+
+Output of Modified Command on Working Directory:
+ coreutils-8.29		     gnu-keyring.gpg
+ coreutils-8.29.tar.xz	     hw3.txt
+ coreutils-8.29.tar.xz.sig   lab3.txt
+
+Output of Unmodified Command on Empty Directory:
+.  ..
+
+Output of Modified Command on Empty Directory: (No output)
+
+
+Commands: cd
+          ~/coreutilsInstall/bin/ls -a -A
+          ~/CS35L/lab3/coreutils-8.29/src/ls -a -A
+          mkdir test
+          cd test
+          ~/coreutilsInstall/bin/ls -a -A
+          ~/CS35L/lab3/coreutils-8.29/src/ls -a -A

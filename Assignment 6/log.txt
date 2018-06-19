@@ -1,0 +1,46 @@
+First, we check that the sort command we are using is new enough by using the option --version.
+Command: sort --version
+
+We find that we are using "sort (GNU coreutils) 8.29".
+
+Then, we have to create a file containing 10 million random single-precion floating point numbers
+with one on each line. We do this by running the od command with the -An option to suppress the
+addresses, -t fF option to get single-precion floating point numbers and the -N 40000000 option to
+create 10 million numbers (-N takes bytes and a single-precision float is 4 bytes, so 40 million
+bytes creates 10 million floating point numbers). Then, we use the tr command to get rid of spaces
+in between numbers and sed to remove empty lines. The output of the command is stored in a file
+named "randfloats.txt".
+Command: od -A n -t fF -N 80000000 < /dev/urandom | tr -s ' ' '\n' | sed '/^$/d' > randfloats.txt
+
+Now, we use time -p to time the command sort -g with floating point numbers. We then also use the
+--parallel option to time it on 1, 2, 4, and 8 threads. The results are below:
+
+time -p sort -g randfloats.txt > /dev/null
+real 21.28
+user 114.56
+sys 0.46
+
+time -p sort -g --parallel=1 randfloats.txt > /dev/null
+real 111.40
+user 111.21
+sys 0.18
+
+time -p sort -g --parallel=2 randfloats.txt > /dev/null
+real 58.96
+user 112.12
+sys 0.26
+
+time -p sort -g --parallel=4 randfloats.txt > /dev/null
+real 33.63
+user 113.20
+sys 0.34
+
+time -p sort -g --parallel=8 randfloats.txt > /dev/null
+real 20.98
+user 114.15
+sys 0.46
+
+We notice that as more threads are used, the real time decreases by a lot while the user time and
+system time increases a little. Additionally, the time it takes for 8 threads is very close to the
+time it takes without any --parallel option. This is most likely due to the fact that the sort
+option on new enough versions uses multiple threads to improve performance.

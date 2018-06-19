@@ -1,0 +1,57 @@
+#!/bin/bash
+
+D=$1
+
+REGULAR_FILES=`ls $D | sort`
+DOT_FILES=`ls -a $D | grep '^\.' | sort`
+
+declare -a FINAL_FILES
+let nFiles=0
+
+IFS=$'\n'
+
+for DFILE in $DOT_FILES
+do
+    if [ ! -h "$D/$DFILE" ]
+    then
+	if [ ! -r "$D/$DFILE" ]
+	then
+	    echo "There is a problem reading $DFILE"
+	    continue
+	fi
+	if [ -f "$D/$DFILE" ]
+	then
+            FINAL_FILES[$nFiles]="$D/$DFILE"
+            let nFiles=nFiles+1
+	fi
+    fi
+done
+
+for RFILE in $REGULAR_FILES
+do
+    if [ ! -h "$D/$RFILE" ]
+    then
+	if [ ! -r "$D/$RFILE" ]
+	then
+	    echo "There is a problem reading $RFILE"
+	    continue
+	fi
+	if [ -f "$D/$RFILE" ]
+	then
+	    FINAL_FILES[$nFiles]="$D/$RFILE"
+            let nFiles=nFiles+1
+	fi
+    fi
+done
+
+for (( i=0; i<$nFiles; i++ ))
+do
+    for (( j=i+1; j<$nFiles; j++ ))
+    do
+	cmp -s -- "${FINAL_FILES[$i]}" "${FINAL_FILES[$j]}"
+	if [ $? -eq  0 ]
+	then
+	    ln -fP -- "${FINAL_FILES[$i]}" "${FINAL_FILES[$j]}"
+	fi
+    done
+done

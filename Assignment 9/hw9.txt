@@ -1,0 +1,81 @@
+1.
+We created this file to log our actions.
+
+
+2.
+We first checkout version 3.0 of Diffutils into a new branch named "quote".
+Command: git checkout v3.0 -b quote
+
+
+3.
+Then, we install our change to this branch using the patch command.
+Command: patch -p1 < ../quote-3.0-patch.txt
+
+We get the following results that indicate the patch was successful:
+patching file src/cmp.c
+patching file src/diff.c
+patching file src/diff3.c
+patching file src/dir.c
+patching file src/sdiff.c
+patching file src/util.c
+
+
+4.
+We learn how to use the "add-change-log-entry-other window" command (C-x 4 a).
+
+
+5.
+We created a new ChangeLog Entry using the command described in setp 4. The content
+of the ChangeLog entry was borrowed from the original entry that was found in
+git-log.txt.
+Commands: emacs
+	  C-x 4 a
+	  C-x C-s
+	  C-x C-c
+
+
+6.
+We add the changes and commit them to the new branch using the ChangeLog entry as
+the commit message.
+Commands: git add .
+	  git commit -F ChangeLog
+
+
+7.
+Then we used the command git format-patch to create a new patch file.
+Command: git format-patch -1 --stdout > formatted-patch.txt
+
+
+8.
+My partner for this section is Devam Bankim Shroff. We sent each other our
+formatted-patch.txt file and I uploaded his to the SEASnet server. Then, I
+switched to a new branch called partner. I used the git am command to apply
+his formatted patch. Then, I build test his patch with the commands we used
+before. The results are as expected.
+Commands: git checkout v3.0 -b partner
+	  git am ../ds-formatted-patch.txt
+	  ./bootstrap
+	  ./configure
+	  make
+	  make check
+
+
+9. I use the command make distdir to verify that the ChangeLog worked. We look
+at the resulting ChangeLog file in the created diffutils-3.0.1-a7cc folder. We
+find that the output of his ChangeLog is in fact there. Therefore, the patch
+was successful. My partner also found that my patch works successfully on his
+computer as well.
+Commands: make distdir
+	  emacs diffutils-3.0.1-a7cc/ChangeLog
+
+10.
+Now, we inspect the emacs repository with gitk. We first exit the server and open
+it up with -X allow X-forwarding. We then change the directory into emacs one and run the gitk command. A new browser pops up of the repository. We scroll through
+and find the newest merge that is not newer than 2015-01-25.
+
+
+Commands: ssh -X saibalaj@lnxsrv09.seas.ucla.edu
+	  cd ~eggert/src/gnu/emacs
+	  gitk
+
+The description of the roles of the subwindows we see is in gitk-description.txt.

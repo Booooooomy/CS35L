@@ -1,0 +1,34 @@
+Suppose the other teams really had been observing all the bytes going across the network.
+Is your resulting network still secure? If so, explain why, and explain whether your answer
+would change if (1) you assumed the other teams had also tapped your keyboards and had observed
+all of your team's keystrokes, or (2) you are booting off USB and you assume the other teams
+temporarily had physical control of the USB. If not, explain any weaknesses of your team's
+setups, focusing on possible attacks by such outside observers.
+
+1.
+Yes, the network is still secure. Although other teams might have been observing all the bytes,
+the messages are safe since they are encrypted with the public keys and can only be decrypted
+using the private keys on our computers. Furthermore, it is not feasible for other teams to
+identify the private keys with current technology because there is not enough computing power
+to determine the private keys of a network.
+
+(1) If the other teams recorded our keystrokes, our data may be compromised. Although they would
+not be able to directly attain our private key since it is independent of our keystrokes, they
+would be able to determine our passphrase and any other inputs. Then, if an attacker has access
+to our computer, they can use the passphrase to access our files.
+
+(2) If the other teams had physical control of the USB, they could gain access to the .ssh folder
+in the server and gain access to the private key. This would allow them to decrypt all of our
+messages if they are observing the bytes going across the network.
+
+2.
+The gpg2 --verify command doesn't really verify that you personally created the file. Instead, it
+checks whether the target file and the detached signatures match. This can be a problem if an
+attacker intercepts a message, tampers with the information, and creates a different detached
+signature. Then, command will just verify that the file and the detached signatures match and not
+be useful in determining if it's from a different source.
+
+In order to fix the problem, I would need to post my public key on the internet with some
+trustworthy third party organization like certificate authority (CA) so that they can track who
+posted the key. This way, there would be a verification process to ensure that the receiver has
+the right key to verify.

@@ -1,0 +1,110 @@
+Before the lab, I flashed the BeagleBone. I followed the steps in the link
+posted on Piazza. First, I downloaded the image for the Beaglebone Green
+Wireless, which is 'Debian 9.3 2018-03-05 4GB SD IoT'. Then, with 7-zip, I
+decompressed the .img file. Using Image Writer for Windows, I wrote the image
+to a microSD card and inserted the microSD into the BeagleBone. Once I
+connected the BeagleBone to my computer, the lights started flashing. After
+some time, all four of the USRx LED's turned off, signifying that the
+flashing was complete.
+
+After flashing, I had to set up the BeagleBone with my computer. I opened
+start.htm and confirmed that my BeagleBone was successfully connected. Then,
+I installed the necessary drivers. Once I SSH'ed into the BeagleBone, I
+connected the BeagleBone to wi-fi using connmanctl. I ran the following
+commands:
+
+sudo connmanctl
+connmanctl> enable wifi
+connmanctl> scan wifi
+connmanctl> services
+connmanctl> agent on
+connmanctl> connect wifi_506583d4fc5e_544e434150413937414239_managed_psk
+Passphrase? 3760ClassNet
+connmanctl> quit
+
+This allowed us to successfuly connect to the Room 3760 wi-fi so that our
+BeagleBones can communicate with other hosts. Then, we updated the
+BeagleBone. We used apt-get to install updates and other necessary tools.
+We ran the following commands:
+
+sudo apt-get update
+sudo apt-get install xauth
+sudo apt-get install xvfb
+sudo apt-get install firefox-esr-l10n-en-gb
+
+We also checked if our BeagleBone enabled X forwarding. We checked the
+/etc/ssh/ssh_config and /etc/ssh/sshd_config files and changed 'no' to 'yes'
+for all X11 Forwarding options.
+
+Finally, I checked if we all the OpenSSH files installed. We ran the following
+commands to install them if we don't have them already:
+
+sudo apt-get install openssh-server
+sudo apt-get install openssh-client
+
+Once these were installed, we are ready for lab. For this lab, I worked with
+Tanish Ambulkar and Devam Shroff.
+
+I first acted as the server and Tanish as the client. I started by generating
+public/private RSA key pairs using this command:
+
+ssh-keygen
+
+The key was saved to '~/.ssh/id_rsa' and I set the passphrase as 'tanish'. Then,
+I added an user called tanish and created a directory called tanish. This was
+done using the following command:
+
+sudo useradd -d /home/tanish -m tanish
+
+Afterwards, I set the password for this user to 'tanish' as well using:
+
+sudo passwd tanish
+
+Then, I changed directories into the 'tanish' directory we created with cd and
+created a .ssh directory within that directory. I used the following commands:
+
+cd /home/tanish/
+sudo mkdir .ssh
+
+Lastly, I changed the ownership to the 'tanish' user and edited permissions
+so that he is able to log on to the server and write out to files/directories.
+We used the following commands:
+
+sudo chown -R tanish .ssh
+sudo chmod 700 .ssh
+
+Now that the server set-up is complete, I used the the ifconfig command to get
+the IP Address so that tanish can use it as the client. The command is:
+
+ifconfig
+
+The IP address is 10.97.85.111
+
+After he completed his part as the client, we switched roles. As the client, I
+first added my public key to Tanish's server, whose IP address is 10.97.85.122,
+using the following command:
+
+ssh-copy-id -i sai@10.97.85.112
+
+The command prompted me to input his passphrase. Once I did, it added my key to
+his server. Then, we wanted to use ssh-agent to manage authentication. Therefore,
+I first set-up the agent and added the RSA identities to the agent. With this,
+we can log into his host without typing any passwords or passphrases. This was
+accomplished using the following commands.
+
+eval `ssh-agent -s`
+ssh-add
+
+Finally, we used ssh with the -X option to log on to his host and allow port
+forwarding using the following command:
+
+ssh -X sai@10.97.85.112
+
+We ran the command xterm and a shell window popped up. Then, we ran firefox and a
+Firefox browser popped up. Lastly, we created a file called test.txt to ensure
+that the changes are made to the server. We created the file using the following:
+
+touch test.txt
+
+I repeated the same steps with Devam Shroff, acting as both the server and client.
+His IP address was '10.97.85.87'.

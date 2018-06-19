@@ -1,0 +1,236 @@
+1.
+We first get a copy of the Diffutils into our working directory using git.
+Command: git clone ~eggert/src/gnu/diffutils
+
+
+2.
+Then, we cd into diffutils and redirect the output of git log into a file.
+Commands: cd diffutils/
+	  git log > git-log.txt
+
+
+3.
+We redirect the output of the command git tag into a file.
+Command: git tag > git-tags.txt
+
+
+4.
+Next, we want to find the commit. To do so we emacs into git-log.txt and search
+for the commit title "maint: quote 'like this' or "like this", not `like this'".
+Commands: emacs git-log.txt
+	  C-s maint: quote
+
+Then, we copied the hash code of the commit on the clipboard. Once we exit from
+the file, we run the git format-patch command to create a patch file.
+Commands: C-x C-c
+	  git format-patch -1 62ca21c8c1a5aa3488589dcb191a4ef04ae9ed4f \
+	  --stdout > quote-patch.txt
+
+
+5.
+We checkout a branch for version 3.0 of Diffutils.
+Command: git checkout v3.0
+
+
+6.
+We use the patch command to apply the quote patch to version 3.0. We encountered
+some cases in which it was not able to figure out what file to patch. We skipped
+past these by hitting RETURN.
+Command: patch -p1 < quote-patch.txt
+
+We ran into some errors.
+   can't find file to patch at input line 62
+   Hunk #1 FAILED at 9.
+   Hunk #3 FAILED at 60.
+   2 out of 3 hunks FAILED -- saving rejects to file README.rej
+   Hunk #1 FAILED at 19.
+   1 out of 1 hunk FAILED -- saving rejects to file README-hacking.rej
+   Hunk #1 FAILED at 29.
+   1 out of 1 hunk FAILED -- saving rejects to file cfg.mk.rej
+   can't find file to patch at input line 249
+   1 out of 1 hunk ignored
+   can't find file to patch at input line 262
+   Hunk #10 FAILED at 876.
+   Hunk #11 FAILED at 906.
+   Hunk #12 FAILED at 942.
+   3 out of 14 hunks FAILED -- saving rejects to file src/diff.c.rej
+   Hunk #6 FAILED at 433.
+   1 out of 9 hunks FAILED -- saving rejects to file src/diff3.c.rej
+
+
+7.
+We use the git status command to get an overview of what happened.
+Command: git status
+
+Our results:
+
+On branch quote
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	modified:   NEWS
+	modified:   README
+	modified:   TODO
+	modified:   doc/diagmeet.note
+	modified:   ms/config.bat
+	modified:   ms/config.site
+	modified:   po/en.po
+	modified:   src/analyze.c
+	modified:   src/cmp.c
+	modified:   src/context.c
+	modified:   src/diff.c
+	modified:   src/diff.h
+	modified:   src/diff3.c
+	modified:   src/dir.c
+	modified:   src/ifdef.c
+	modified:   src/io.c
+	modified:   src/sdiff.c
+	modified:   src/side.c
+	modified:   src/system.h
+	modified:   src/util.c
+	modified:   tests/help-version
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+	NEWS.orig
+	README-hacking.orig
+	README-hacking.rej
+	README.orig
+	README.rej
+	cfg.mk.orig
+	cfg.mk.rej
+	git-log.txt
+	git-tags.txt
+	ms/config.site.orig
+	quote-patch.txt
+	src/cmp.c.orig
+	src/context.c.orig
+	src/diff.c.orig
+	src/diff.c.rej
+	src/diff.h.orig
+	src/diff3.c.orig
+	src/diff3.c.rej
+	src/dir.c.orig
+	src/sdiff.c.orig
+	src/system.h.orig
+	src/util.c.orig
+	tests/help-version.orig
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+
+8.
+I learned how to use the following commands: vc-diff, vc-revert, and diff-apply
+hunk.
+
+
+9.
+First, we reverted all changes to all files other than the .c files. This was done
+for NEWS, README, TODO, doc/diagmeet.note, ms/config.bat, ms/config.site,
+po/en.po, src/diff.h, src/system.h, and tests/help-version
+Commands: emacs [filename]
+	  C-x v u
+	  'yes'
+	  C-x C-c
+
+Then, for all .c files, we reverted all other changes than the character string
+constants. We did by going to every hunk described by *vc-diff* and reverting the
+hunk with the command 'C-u C-c C-a'. The changed file list in question 7 contains
+all the .c files for which we reverted some changes.
+Commands: emacs [filename]
+	  C-x v =
+	  C-u C-c C-a (for every hunk to be reverted)
+	  C-x C-c
+	  'y'
+
+
+10.
+We now examine the file src/diff3.c.rej and src/diff.c.rej and copy appropriate
+hunks of these rejected patches manually. These patches were rejected because the
+line numbers didn't match with the original file. We made the patches manually by
+searching for a ` and changing to ' whereever it was needed.
+Command: emacs [filename]
+	 C-s `
+	 Backspace '
+	 C-x C-s
+	 C-x C-c
+
+
+11.
+Then, we remove all untracked files that git status warned us about with the
+command 'git clean -f'. The -f options forces the removal of the untracked files.
+Command: git clean -f
+
+
+12.
+We run git status again and to check the modified files.
+Command: git status
+
+We get the following output:
+On branch quote
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	modified:   src/cmp.c
+	modified:   src/diff.c
+	modified:   src/diff3.c
+	modified:   src/dir.c
+	modified:   src/sdiff.c
+	modified:   src/util.c
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+We see that 6 .c files are in fact modified. Then, use git diff to output a new
+patch and redirect the output to a new file. Next, we use the wc command to check
+if the number of lines is in fact between three or four hundred lines. We find
+that there are 326 lines.
+Command: git diff > quote-3.0-patch.txt
+	 wc -l quote-3.0-patch.txt
+
+
+13.
+We read the README-hacking file and determine that we have to use the following
+commands:
+	./bootstrap
+	./configure
+	make
+	make check
+
+Note: I was using lnxsrv02, which has an older ver of the GNU C Library, for this
+part and did not have to apply an additional patch after running ./bootstrap.
+
+Afterwards, we verified that Diffutils does the right thing with the the scenario
+of using "diff . -" and "dif --help" command.
+Commands: diff . -
+	  diff --help
+
+As we intended, we see that the quote before the word is ' and not `.
+
+
+14.
+Now, we want to do a sanity test with our modified version of Diffutils. First, we
+copy the contents of the src folder into a new folder called "diffutils-3.0-patch".
+Then, we go back to our working directory and reclone the original diffutils into
+a folder called "diffutils-orig". After going into the original diffutils, we copy
+the contents of the src folder into a new folder called "diffutils-3.0". Going back
+to our working directory again, we run our implementation of diff on these two
+source codes.
+Commands: cp -r src ../diffutils-3.0-patch
+	  cd ..
+	  git clone ~eggert/src/gnu/diffutils diffutils-orig
+	  cd diffutils-orig
+	  cp -r src ../diffutils-3.0
+	  cd ..
+	  diffutils/src/diff -pru diffutils-3.0 diffutils-3.0-patch \
+	  > quote-3.0-test.txt
+
+
+15.
+We use the diff command to compare the contents of the two files specified. We find
+that the files are not identical and there are, in fact, a lot of differences.
+However, the differences are innocuous, and most differences are that ' is used
+instead of ` or there are different paths to the files.
+Command: diff -u quote-3.0-test.txt quote-3.0-patch.txt > r.txt

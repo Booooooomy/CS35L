@@ -1,0 +1,79 @@
+1.
+First, we write the tr2b.c program that uses getchar and putchar to transliterate
+bytes from stdin. Then, we have 3 checks before we transliterate bytes. We check if
+there are 2 arguments, if "from" and "to" have the same length, and if "from" has any
+duplicates. Then, we iterate through each byte in stdin and transliterate it.
+
+
+2.
+Next, we write the program tr2u.c program that does the same thing, but
+instead uses read and write.
+
+
+3.
+Now, we want to use the strace command to compare system calls made by tr2b and tr2u.
+Since, we want to use a large 5MB file, we use the following command to create one:
+Command: head --bytes=5000000 /dev/urandom > largefile.txt
+
+Next, we run the strace command to compare the system calls when copying one file
+to another. To do so, we use strace with the option 'c'. We run it on tr2b and then
+on tr2u.
+
+Command: strace -c ./tr2b 'AB' 'XY' < largefile.txt > tr2boutput.txt
+
+We get that there were 29 syscalls.
+
+Command: strace -c ./tr2u 'AB' 'XY' < largefile.txt > tr2uoutput.txt
+
+We get that there were 10000024 syscalls. We see that tr2u has a lot more system
+calls than tr2b for large files since there are many read and write calls.
+
+Then, we run the strace command  compare the system calls when copying a file to your
+terminal. We do the same but do not have the output redirected to a file.
+
+Command: strace -c ./tr2b 'AB' 'XY' < largefile.txt
+
+We get that there were 31 syscalls.
+
+Command: strace -c ./tr2u 'AB' 'XY' < largefile.txt
+
+We get that there were 10000024 syscalls. Similarly to before, we see that tr2u has
+a lot more system calls than tr2b. We also see that tr2b takes 2 more system calls
+when copying the file to terminal than to another file. This is because there are
+2 more write calls. However, tr2u has the same amount of systems calls for both
+type of copying.
+
+
+4.
+Finally, we run time command to measure how much faster one program is at copying
+data. We expect tr2b to be faster than tr2u since it has fewer system calls.
+
+First, we use the time command on both tr2b and tr2u on copying to another file.
+Command: time ./tr2b 'AB' 'XY' < largefile.txt > tr2boutput2.txt
+Output:
+  real	0m0.004s
+  user	0m0.000s
+  sys	0m0.001s
+
+Command: time ./tr2u 'AB' 'XY' < largefile.txt > tr2uoutput2.txt
+Output:
+  real	0m9.435s
+  user	0m1.252s
+  sys	0m8.052s
+
+As we expected, tr2b was much faster. Then, we test it on copying to terminal.
+Command: time ./tr2b 'AB' 'XY' < largefile.txt
+Output:
+  real	0m0.002s
+  user	0m0.000s
+  sys	0m0.001s
+
+Command: time ./tr2u 'AB' 'XY' < largefile.txt
+Output:
+  real	0m8.746s
+  user	0m1.239s
+  sys	0m7.496s
+
+Again, we find that that tr2b is much faster. This signifies that buffered I/O
+is in fact faster than unbuffered I/O since it decreases the number of read/write
+calls and the overhead.
