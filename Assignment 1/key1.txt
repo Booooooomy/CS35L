@@ -62,7 +62,7 @@ main (void)
 
 Exercise 1.6: Running Elisp code
 1. C-x b Enter
-2. ( r a n d o m SP " 0 0 4 - 9 6 3 - 4 6 6 " ) C-j
+2. ( r a n d o m SP " X X X - X X X - X X X " ) C-j
    Result: 1814583605557060552
 3. ( s e t q SP x SP ( r a n d o m ) ) C-j
    ( s e t q SP y SP ( r a n d o m ) ) C-j
