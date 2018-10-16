@@ -44,7 +44,7 @@ Exercise 1.5: Doing commands in Emacs
 1. M-x m a k e - d i r e c t o r y Enter j u n l Enter
 2. C-x C-f j u n k / h e l l o . c Enter
    Copied & pasted code from website (Cmd-C Cmd-V)
-3. M-x c o m p i l e M-0 C-k g c c SP h e l l o . c Enter y
+3. M-x c o m p i l e C-a C-k g c c SP h e l l o . c Enter y
 4. C-x b h e l l o - o u t
    C-u M-! . / a . o u t 
 5.
