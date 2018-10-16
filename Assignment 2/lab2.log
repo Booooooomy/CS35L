@@ -1,5 +1,5 @@
 Locale
-We check locale we're in by using the locale command. If we are not in the
+We check the locale we're in by using the locale command. If we are not in the
 standard C or POSIX locale, we set the locale to standard C. We run the locale
 command again to make sure the locale has been changed.
 Commands: locale
@@ -13,7 +13,7 @@ Command: sort /usr/share/dict/words > words
 
 
 Command Outputs
-We download the assigment's web page using wget to run the listed commands.
+We download the assignment's web page using wget to run the listed commands.
 The webpage is stored in a file called assign2.html.
 Command: wget https://web.cs.ucla.edu/classes/spring18/cs35L/assign/assign2.html
 
@@ -42,9 +42,9 @@ Command: wget https://web.cs.ucla.edu/classes/spring18/cs35L/assign/assign2.html
 
 5. tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort -u | comm - words
    This command takes the output from before and compares it to the 'words'
-   file. It outputs 3 columns. The first column are words unique to our output
-   from part 4. The second column are words unique to the 'words' file. The
-   third column are words common to both.
+   file. It outputs 3 columns. The first column contains words unique to our output
+   from part 4. The second column contains words unique to the 'words' file. The
+   third column contains words common to both.
 
 6. tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort -u | comm -23 - words
    This command only outputs the words unique to our output from part 4. The -23
